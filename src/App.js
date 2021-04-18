@@ -15,6 +15,7 @@ const App = () => {
   
   const login = useCallback(() => {
     setisLoggedIn(true);
+    window.location.href = "/";
   },[]);
 
   const logout = useCallback(() => {

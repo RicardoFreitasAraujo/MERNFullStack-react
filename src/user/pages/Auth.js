@@ -8,13 +8,13 @@ import { useForm } from '../../shared/hooks/form-hook';
 import { AuthContext } from '../../shared/context/auth-context';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
+import { useHttpClient } from '../../shared/hooks/http-hook';
 
 const Auth = () => {
 
     const auth = useContext(AuthContext);
     const [isLoginMode, setIsLoginMode] = useState(true);
-    const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState();
+    const { isLoading, error, sendRequest, clearError } = useHttpClient();
 
     const [formState, inputHandler, setFormData] = useForm({
         email: { value: '', isValid: false },
@@ -23,7 +23,6 @@ const Auth = () => {
 
     const authSubmitHandler = async (event) => {
         event.preventDefault();
-        setIsLoading(true);
         if (isLoginMode) {
             try {
                 
@@ -32,26 +31,18 @@ const Auth = () => {
                     password: formState.inputs.password.value
                 };
                 
-                const response = await fetch('http://localhost:5000/api/users/login', { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Type' : 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const responseData = await response.json();     
-                if (!response.ok)  {
-                    throw new Error(responseData.message);
-                }
-                setIsLoading(false);         
+                const responseData = await sendRequest('http://localhost:5000/api/users/login',
+                                                   'POST', 
+                                                   JSON.stringify(payload),
+                                                   {
+                                                       'Content-Type':'application/json'
+                                                   });
+                
                 auth.login(); 
-                window.location.href = "/";
             } 
             catch(err)
             {
-                setIsLoading(false);
-                setError(err.message || 'Something went wrong');
+                
             }
         } else {
 
@@ -63,26 +54,14 @@ const Auth = () => {
                     password: formState.inputs.password.value
                 };
                 
-                const response = await fetch('http://localhost:5000/api/users/signup', { 
-                    method: 'POST',
-                    headers: {
-                        'Content-Type' : 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const responseData = await response.json();     
-                if (!response.ok)  {
-                    throw new Error(responseData.message);
-                }
-                console.log(responseData);
-                setIsLoading(false);         
+                const response = await sendRequest('http://localhost:5000/api/users/signup',
+                                                   'POST', 
+                                                   JSON.stringify(payload),
+                                                   { 'Content-Type' : 'application/json' });
                 auth.login(); 
             } 
             catch(err)
             {
-                setIsLoading(false);
-                setError(err.message || 'Something went wrong');
             }
         }        
     }
@@ -105,13 +84,9 @@ const Auth = () => {
         setIsLoginMode(prevMode => !prevMode);
     };
 
-    const errorHandler = () =>  {
-        setError(null)
-    }
-
     return (
         <React.Fragment>
-        <ErrorModal error={error} onClear={errorHandler}>
+        <ErrorModal error={error} onClear={clearError}>
             {error}
         </ErrorModal>
         <Card className="authentication">
