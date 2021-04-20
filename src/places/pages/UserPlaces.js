@@ -1,40 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import PlaceList from '../components/PlaceList';
 import { useParams } from 'react-router-dom'; 
+import { useHttpClient } from '../../shared/hooks/http-hook';
+import ErrorModal from '../../shared/components/UIElements/ErrorModal';
+import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 
 const UserPlaces = () => {
 
-    const userId = useParams().userId;
+    const {isLoading, error, sendRequest, clearError } = useHttpClient();
+    const [loadedPlaces, setLoadedPlaces] = useState([]);
     
-    const DUMMY_PLACES = [
-        {
-            id: 'p1',
-            title: 'Empire State Building',
-            description: 'One of the most famous sky scrapers in the world!',
-            imageUrl: 'https://dicasnovayork.com.br/wp-content/uploads/2016/02/empire_header1-1000x700.jpg',
-            address: '20 W 34th St, New',
-            location: {
-                lat: 40.7484405,
-                lng: -73.9878584
-            },
-            creator: 'u1'
-        },
-        {
-            id: 'p2',
-            title: 'Empire State Building - 2X',
-            description: 'One of the most famous sky scrapers in the world!',
-            imageUrl: 'https://dicasnovayork.com.br/wp-content/uploads/2016/02/empire_header1-1000x700.jpg',
-            address: '20 W 34th St, New',
-            location: {
-                lat: 40.7484405,
-                lng: -73.9878584
-            },
-            creator: 'u2'
-        }
-    ];
-    const loadedPlaces = DUMMY_PLACES.filter(place => place.creator === userId);
+    const userId = useParams().userId;
 
-    return(<PlaceList items={loadedPlaces}/>);
+    const loadPlaces = async () => {
+        
+        try {
+            console.log('Vai carregar');
+            const responseData = await sendRequest(`http://localhost:5000/api/places/user/${userId}`);
+            setLoadedPlaces(responseData.places);
+        }
+        catch (err) { }
+    }
+
+    useEffect(() => {
+        loadPlaces();
+    },[sendRequest, userId])
+    
+    const placeDeletedHandler = (deletedPlaceId) => {
+        setLoadedPlaces(prevPlaces =>  prevPlaces.filter(places => places.id !== deletedPlaceId) );
+    }
+
+    return(
+        <React.Fragment>
+            <ErrorModal error={error} onClear={clearError}/>
+            {isLoading && <div className="center"><LoadingSpinner/></div>}
+            {!isLoading && loadedPlaces && 
+                <PlaceList items={loadedPlaces} 
+                           onDeletePlace={placeDeletedHandler}/>
+            } 
+            
+        </React.Fragment>
+        );
 }
 
 export default UserPlaces;

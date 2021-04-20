@@ -9,6 +9,7 @@ import { AuthContext } from '../../shared/context/auth-context';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 import { useHttpClient } from '../../shared/hooks/http-hook';
+import { useHistory } from 'react-router-dom';
 
 const Auth = () => {
 
@@ -21,10 +22,12 @@ const Auth = () => {
         password: {value:'', isValid: false}
     }, false);
 
+    const history = useHistory();
+
     const authSubmitHandler = async (event) => {
         event.preventDefault();
         if (isLoginMode) {
-            try {
+             try {
                 
                 let payload = {
                     email: formState.inputs.email.value,
@@ -38,7 +41,8 @@ const Auth = () => {
                                                        'Content-Type':'application/json'
                                                    });
                 
-                auth.login(); 
+                auth.login(responseData.user.id); 
+                history.push('/');
             } 
             catch(err)
             {
@@ -54,11 +58,12 @@ const Auth = () => {
                     password: formState.inputs.password.value
                 };
                 
-                const response = await sendRequest('http://localhost:5000/api/users/signup',
+                const responseData = await sendRequest('http://localhost:5000/api/users/signup',
                                                    'POST', 
                                                    JSON.stringify(payload),
                                                    { 'Content-Type' : 'application/json' });
-                auth.login(); 
+                auth.login(responseData.user.id); 
+                history.push('/');
             } 
             catch(err)
             {

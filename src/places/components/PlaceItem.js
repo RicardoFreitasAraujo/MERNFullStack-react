@@ -6,8 +6,14 @@ import Button from '../../shared/components/FormsElements/Button';
 import Modal from '../../shared/components/UIElements/Modal';
 import Map from '../../shared/components/UIElements/Map';
 import { AuthContext } from '../../shared/context/auth-context';
+import { useHttpClient } from '../../shared/hooks/http-hook';
+import ErrorModal from '../../shared/components/UIElements/ErrorModal';
+import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 
 const PlaceItem = (props) => {
+
+    const {isLoading, error, sendRequest, clearError } = useHttpClient();
+
     const auth = useContext(AuthContext);
     const [showMap, setShowMap] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -24,11 +30,18 @@ const PlaceItem = (props) => {
         setShowConfirmModal(false);
     }
 
-    const confirmDeleteHandler = () => {
-        setShowConfirmModal(false);
+    const confirmDeleteHandler = async () => {
+        try {
+            setShowConfirmModal(false);
+            await sendRequest(`http://localhost:5000/api/places/${props.id}`,'DELETE');
+            props.onDelete(props.id);
+        } 
+        catch (err) {}
     }
 
     return(<React.Fragment>
+               <ErrorModal error={error} onClear={clearError}>{error}</ErrorModal>
+               {isLoading && <LoadingSpinner asOverlay /> }
                <Modal show={showMap} 
                        onCancel={closeShowMapHandler} 
                        header={props.address} 
@@ -67,6 +80,7 @@ const PlaceItem = (props) => {
                         </div>
                         <div className="place-item__actions">
                             <Button inverse onClick={openShowMapHandler}>VIEW ON MAP</Button>
+                            {auth.isLoggedIn}
                             {auth.isLoggedIn && <Button to={`/places/${props.id}`}>EDIT</Button> }
                             {auth.isLoggedIn && <Button danger onClick={showDeleteWarningHandler}>DELETE</Button>}
                         </div>
