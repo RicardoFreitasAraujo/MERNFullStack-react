@@ -15,7 +15,6 @@ const UserPlaces = () => {
     const loadPlaces = async () => {
         
         try {
-            console.log('Vai carregar');
             const responseData = await sendRequest(`http://localhost:5000/api/places/user/${userId}`);
             setLoadedPlaces(responseData.places);
         }

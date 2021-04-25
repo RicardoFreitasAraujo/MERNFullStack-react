@@ -3,18 +3,16 @@ import { useHistory } from 'react-router-dom';
 
 import './PlaceForm.css';
 
-
 import Input from '../../shared/components/FormsElements/Input';
 import Button from '../../shared/components/FormsElements/Button';
 import { VALIDATOR_REQUIRE, VALIDATOR_MINLENGTH } from '../../shared/util/validators';
-
 import { useForm } from '../../shared/hooks/form-hook';
 import { useHttpClient } from '../../shared/hooks/http-hook';
 import Auth from '../../user/pages/Auth';
 import { AuthContext } from '../../shared/context/auth-context';
 import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
-
+import ImageUpload from '../../shared/components/FormsElements/ImageUpLoad';
 
 const NewPlace = () => {
 
@@ -25,7 +23,8 @@ const NewPlace = () => {
     const [formState, inputHandler] = useForm({
         title: { value: '', isValid: false },
         description: { value: '', isValid: false },
-        address: { value: '', isValid: false }
+        address: { value: '', isValid: false },
+        image: { value: null, isValid: false },
     }, false);
 
     const history = useHistory(); 
@@ -34,18 +33,18 @@ const NewPlace = () => {
         event.preventDefault();
         console.log(formState);
         try {
-            let payload = {
-                title: formState.inputs.title.value,
-                description: formState.inputs.description.value,
-                address: formState.inputs.address.value,
-                creator: auth.userId
-            };
+            
+            const formData = new FormData();
+            formData.append('title', formState.inputs.title.value);
+            formData.append('description', formState.inputs.description.value);
+            formData.append('address', formState.inputs.address.value);
+            formData.append('creator', auth.userId);
+            formData.append('image', formState.inputs.image.value);
 
             await sendRequest('http://localhost:5000/api/places',
                     'POST',
-                    JSON.stringify(payload),
-                    {
-                        'Content-Type':'application/json'
+                    formData, {
+                        Authorization: 'Bear ' + auth.token 
                     });
 
             //Redirect the user to a different page
@@ -82,6 +81,10 @@ const NewPlace = () => {
                         validators={ [VALIDATOR_REQUIRE() ]}
                         errorText="Please enter a valid address"
                         onInput={inputHandler}/>
+                <ImageUpload  
+                        id="image" 
+                        onInput={inputHandler} 
+                        errorText="Please provide an image."/>
                 <Button type="submit" disabled={!formState.isValid}>
                     ADD PLACE
                 </Button>

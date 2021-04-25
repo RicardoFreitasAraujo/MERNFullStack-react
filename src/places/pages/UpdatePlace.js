@@ -51,12 +51,13 @@ const UpdatePlace = () => {
             };
             const responseData = await sendRequest(`http://localhost:5000/api/places/${placeId}`, 'PATCH',
             JSON.stringify(payload),{
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + auth.token
             });
 
             history.push(`/${auth.userId}/places`);
         }
-        catch(err) {}
+        catch(err) { }
     }
 
     if (isLoading) {

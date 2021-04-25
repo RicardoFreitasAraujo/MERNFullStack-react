@@ -10,6 +10,7 @@ import ErrorModal from '../../shared/components/UIElements/ErrorModal';
 import LoadingSpinner from '../../shared/components/UIElements/LoadingSpinner';
 import { useHttpClient } from '../../shared/hooks/http-hook';
 import { useHistory } from 'react-router-dom';
+import ImageUpLoad from '../../shared/components/FormsElements/ImageUpLoad';
 
 const Auth = () => {
 
@@ -25,7 +26,9 @@ const Auth = () => {
     const history = useHistory();
 
     const authSubmitHandler = async (event) => {
+
         event.preventDefault();
+        
         if (isLoginMode) {
              try {
                 
@@ -41,7 +44,7 @@ const Auth = () => {
                                                        'Content-Type':'application/json'
                                                    });
                 
-                auth.login(responseData.user.id); 
+                auth.login(responseData.userId, responseData.token); 
                 history.push('/');
             } 
             catch(err)
@@ -52,17 +55,16 @@ const Auth = () => {
 
             try {
                 
-                let payload = {
-                    name: formState.inputs.name.value,
-                    email: formState.inputs.email.value,
-                    password: formState.inputs.password.value
-                };
-                
+                const formData = new FormData();
+                formData.append('name',formState.inputs.name.value);
+                formData.append('email',formState.inputs.email.value);
+                formData.append('password',formState.inputs.password.value);
+                formData.append('image',formState.inputs.image.value);
+     
                 const responseData = await sendRequest('http://localhost:5000/api/users/signup',
                                                    'POST', 
-                                                   JSON.stringify(payload),
-                                                   { 'Content-Type' : 'application/json' });
-                auth.login(responseData.user.id); 
+                                                   formData);
+                auth.login(responseData.userId, responseData.token); 
                 history.push('/');
             } 
             catch(err)
@@ -75,13 +77,18 @@ const Auth = () => {
         if (!isLoginMode) {
             setFormData({ 
                 ...formState.inputs,
-                name: undefined
+                name: undefined,
+                image: undefined
             },formState.inputs.email.isValid && formState.inputs.password.isValid);
         } else {
             setFormData({
                 ...formState.inputs,
                 name: {
                     value: '',
+                    isValid: false
+                },
+                name: {
+                    value: null,
                     isValid: false
                 }
             }, false);
@@ -122,11 +129,12 @@ const Auth = () => {
                    id="password" 
                    type="password" 
                    label="Password" 
-                   validators={[VALIDATOR_MINLENGTH(5)]}
+                   validators={[VALIDATOR_MINLENGTH(6)]}
                    errorText="Please enter a valid password."
                    onChange={inputHandler}
                    onInput={inputHandler}/>
-            <Button onClick={authSubmitHandler}>
+            {!isLoginMode && <ImageUpLoad center id="image" onInput={inputHandler} errorText="Please provide an image."/>}
+            <Button onClick={authSubmitHandler} disabled={!formState.isValid}>
                 { isLoginMode ? 'LOGIN' : 'SIGNUP' }
             </Button>
         </form>
@@ -134,5 +142,5 @@ const Auth = () => {
     </Card>
     </React.Fragment>);
 };
-
+ 
 export default Auth;
