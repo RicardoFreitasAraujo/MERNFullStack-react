@@ -31,7 +31,7 @@ const UpdatePlace = () => {
         const fetchPlace = async() => {
             
             try {
-                const responseData = await sendRequest(`http://localhost:5000/api/places/${placeId}`);
+                const responseData = await sendRequest(`${process.env.REACT_APP_BACKEND_URL}/places/${placeId}`);
                 setLoadedPlace(responseData.place);
                 setFormData({
                     title: { value: responseData.place.title, isValid: true  },
@@ -49,7 +49,7 @@ const UpdatePlace = () => {
                 title: formState.inputs.title.value,
                 description: formState.inputs.description.value
             };
-            const responseData = await sendRequest(`http://localhost:5000/api/places/${placeId}`, 'PATCH',
+            const responseData = await sendRequest(`${process.env.REACT_APP_BACKEND_URL}/places/${placeId}`, 'PATCH',
             JSON.stringify(payload),{
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer ' + auth.token
